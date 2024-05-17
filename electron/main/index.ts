@@ -187,23 +187,36 @@ export async function newFile() {
 
   if (!win) return -1;
 
-  // Get path to new file
-  dialog.showSaveDialog(win, {
-    buttonLabel: 'Create New',
-    filters: [{ name: 'OpenMarch File', extensions: ['dots'] }]
-  }).then((path) => {
-    if (path.canceled || !path.filePath) return;
+  const newFileOptions = {
+    // type: 'question', // Or 'question' if you want a question mark icon
+    buttons: ['NCAA Football Field (College)', 'High School Basketball Court (WGI)', 'Cancel'],
+    title: 'Choose OpenMarch Field Type',
+    message: 'What kind of show will you be writing for?',
+  };
 
-    setActiveDb(path.filePath, true);
-    DatabaseServices.initDatabase();
-    win?.webContents.reload();
-
-    return 200;
+  dialog.showMessageBox(win, newFileOptions).then((response) => {
+    handleFileSave(response.response)
   }).catch((err) => {
     console.log(err);
     return -1;
   });
+}
 
+function handleFileSave(fieldType: number) {
+  dialog.showSaveDialog(win, {
+    buttonLabel: 'Create New',
+    defaultPath: `New_Show.dots`, // Suggest filename based on sport
+    filters: [{ name: 'OpenMarch File', extensions: ['dots'] }]
+  }).then((path) => {
+    if (path.canceled) return;
+
+    setActiveDb(path.filePath, true);
+    DatabaseServices.initDatabase(fieldType); // Pass the chosen sport
+    win?.webContents.reload();
+  }).catch((err) => {
+    console.log(err);
+    return -1;
+  });
 }
 
 /**

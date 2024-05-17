@@ -46,6 +46,14 @@ export class FieldProperties {
                 this.yCheckpoints = FieldProperties.createNCAAFootballFieldYCheckpoints();
                 this.template = template;
                 break;
+
+            case FieldProperties.Template.WGI_BASKETBALL:
+                this.centerFrontPoint = { xPixels: 500, yPixels: 500 };
+                this.xCheckpoints = FieldProperties.createHighSchoolBasketballCourtXCheckpoints();
+                this.yCheckpoints = FieldProperties.createHighSchoolBasketballCourtYCheckpoints();
+                this.template = template;
+                break;
+
             default:
                 throw new Error(`FieldProperties ${template} template not supported`);
         }
@@ -137,16 +145,87 @@ export class FieldProperties {
         ];
     }
 
+    private static createHighSchoolBasketballCourtXCheckpoints(): Checkpoint[] {
+        const xCheckpoints: Checkpoint[] = [];
+    
+        // Constants
+        const COURT_WIDTH_FEET = 94; 
+        const COURT_WIDTH_STEPS = COURT_WIDTH_FEET * 12 / 22.5; // Convert feet to steps
+    
+        // Center reference
+        const stepsFromCenterFront = COURT_WIDTH_STEPS / 2;  
+    
+        // Key Lines (adjust these as needed)
+        const importantLines = [
+            { name: "Sideline", distanceFromCenter: stepsFromCenterFront },
+            { name: "Half Court", distanceFromCenter: 0 }, 
+            { name: "Free Throw Line", distanceFromCenter: 10 },
+            // ... add more lines as needed
+        ];
+    
+        // Generate checkpoints for both sides of the court
+        for (const line of importantLines) {
+            for (const side of [-1, 1]) { // -1 for left side, 1 for right side
+                const stepsFromCenter = line.distanceFromCenter * side;
+                const label = line.name; 
+    
+                xCheckpoints.push({
+                    name: label,
+                    axis: "x",
+                    terseName: label, 
+                    stepsFromCenterFront: stepsFromCenter,
+                    useAsReference: true, // Adjust if needed
+                    fieldLabel: label 
+                });
+            }
+        }
+    
+        return xCheckpoints;
+    }
+
+    private static createHighSchoolBasketballCourtYCheckpoints(): Checkpoint[] {
+        const yCheckpoints: Checkpoint[] = [];
+
+        // Constants (in steps)
+        const COURT_LENGTH = 50 * 12 / 22.5; 
+        const HALF_COURT_LENGTH = 25 * 12 / 22.5; 
+        const FREE_THROW_LINE_HALF_LENGTH = 6 * 12 / 22.5; 
+        const CENTER_CIRCLE_RADIUS = 6 * 12 / 22.5; 
+        const SIDELINE_OFFSET = 6 * 12 / 22.5; // 6 feet to steps
+    
+        // Y-Checkpoints (distance behind the center point)
+        yCheckpoints.push(
+            // Free Throw Lines
+            { name: "frontFreeThrow", axis: "y", stepsFromCenterFront: -(SIDELINE_OFFSET + HALF_COURT_LENGTH - FREE_THROW_LINE_HALF_LENGTH), useAsReference: true, terseName: "FFT" },
+            { name: "backFreeThrow", axis: "y", stepsFromCenterFront: -(SIDELINE_OFFSET + HALF_COURT_LENGTH + FREE_THROW_LINE_HALF_LENGTH), useAsReference: true, terseName: "BFT" },
+    
+            // Center Circle 
+            { name: "frontCenterCircle", axis: "y", stepsFromCenterFront: -(SIDELINE_OFFSET + HALF_COURT_LENGTH - CENTER_CIRCLE_RADIUS), useAsReference: true, terseName: "FCC" },
+            { name: "backCenterCircle", axis: "y", stepsFromCenterFront: -(SIDELINE_OFFSET + HALF_COURT_LENGTH + CENTER_CIRCLE_RADIUS), useAsReference: true, terseName: "BCC" },
+    
+            // Sidelines
+            { name: "frontSideline", axis: "y", stepsFromCenterFront: -SIDELINE_OFFSET, useAsReference: true, terseName: "FSL" },
+            { name: "backSideline", axis: "y", stepsFromCenterFront: -(SIDELINE_OFFSET + COURT_LENGTH), useAsReference: true, terseName: "BSL" },
+    
+            // Half Court Line
+            { name: "frontCourtSide", axis: "y", stepsFromCenterFront: 0, useAsReference: true, terseName: "FCS" }, // Our reference point
+            { name: "backCourtSide", axis: "y", stepsFromCenterFront: -(COURT_LENGTH + (SIDELINE_OFFSET * 2)), useAsReference: false, terseName: "BCS" } // Unnecessary, same as FCS
+        );
+    
+        return yCheckpoints;
+    }
+
     // TODO High school, NFL, checkpoints. With high school, you need to consider how the step sizes change
 }
 
 export namespace FieldProperties {
     /**
      * The templates for the field properties. E.g. NCAA, NFL, High School
-     * Only NCAA is supported right now.
+     * Only NCAA and high-school basketball courts is supported right now.
      */
     export enum Template {
-        NCAA = "NCAA"
+        NCAA = "NCAA",
+        WGI_BASKETBALL = "WGI_BASKETBALL"
     }
 }
 
@@ -217,6 +296,15 @@ interface YardNumberCoordinates {
 export function getYardNumberCoordinates(template: FieldProperties.Template): YardNumberCoordinates {
     switch (template) {
         case FieldProperties.Template.NCAA: {
+            let coordinates: YardNumberCoordinates = {
+                homeStepsFromFrontToOutside: 11.2,
+                homeStepsFromFrontToInside: 14.4,
+                awayStepsFromFrontToInside: 70.9333,
+                awayStepsFromFrontToOutside: 74.1333
+            };
+            return coordinates;
+        }
+        case FieldProperties.Template.WGI_BASKETBALL: {
             let coordinates: YardNumberCoordinates = {
                 homeStepsFromFrontToOutside: 11.2,
                 homeStepsFromFrontToInside: 14.4,

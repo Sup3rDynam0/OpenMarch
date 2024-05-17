@@ -56,7 +56,7 @@ export function databaseIsReady() {
 /**
  * Initiates the database by creating the tables if they do not exist.
  */
-export function initDatabase() {
+export function initDatabase(fieldType: number) {
     const db = connect();
     console.log(db);
     console.log('Creating database...');
@@ -64,7 +64,7 @@ export function initDatabase() {
     createMarcherTable(db);
     createPageTable(db);
     createMarcherPageTable(db);
-    createFieldPropertiesTable(db, FieldProperties.Template.NCAA);
+    createFieldPropertiesTable(db, mapFieldTypeToTemplate(fieldType));
     History.createHistoryTables(db);
     console.log('Database created.');
     db.close();
@@ -870,3 +870,18 @@ async function getPreviousPage(pageId: number, db?: Database.Database): Promise<
     return result as Page || null;
 
 }
+
+
+// A small function used for DB creation.
+function mapFieldTypeToTemplate(fieldType: number) {
+    switch (fieldType) {
+      case 0:
+        return FieldProperties.Template.NCAA;
+      case 1:
+        return FieldProperties.Template.WGI_BASKETBALL; 
+      default:
+        // Handle invalid field types (optional)
+        console.error(`Invalid field type: ${fieldType}`);
+        return FieldProperties.Template.NCAA; // Fallback or throw an error
+    }
+  }

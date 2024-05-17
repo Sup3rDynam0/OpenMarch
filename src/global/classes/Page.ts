@@ -555,32 +555,22 @@ export interface ModifiedPageContainer {
  * @param letters The letters to increment.
  * @returns A -> B, B -> C, ..., Z -> AA, AA -> AB, etc. Letters are always capitalized.
  */
-function incrementLetters(letters: string) {
-    let result = [];
-    let carry = true; // Start with the assumption that we need to increment the last character
-
-    const capitalizedLetters = letters.toUpperCase();
-
-    // Traverse from last to first character to handle the carry
-    for (let i = capitalizedLetters.length - 1; i >= 0; i--) {
-        let char = capitalizedLetters[i];
-        if (carry) {
-            if (char === 'Z') {
-                result.push('A');
-            } else {
-                result.push(String.fromCharCode(char.charCodeAt(0) + 1));
-                carry = false; // No carry needed if we haven't wrapped from 'Z' to 'A'
-            }
-        } else {
-            result.push(char); // If no carry, keep current character as is
-        }
+function incrementLetters(str: string): string {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let carry = 1;  // Tracks if we need to carry over to the next position
+  
+    // Work backwards through the string for efficiency
+    let result = "";
+    for (let i = str.length - 1; i >= 0; i--) {
+      let index = (alphabet.indexOf(str[i]) + carry) % 26;
+      result = alphabet[index] + result;
+      carry = Math.floor((alphabet.indexOf(str[i]) + carry) / 26);
     }
-
-    // If the string was all 'Z's, we will have carry left over after processing all characters
+  
+    // If there's a remaining carry, prepend 'A'
     if (carry) {
-        result.push('A'); // Append 'A' to handle cases like 'ZZ' -> 'AAA'
+      result = 'A' + result;
     }
-
-    // Since we've constructed the result in reverse order, reverse it back and join into a string
-    return result.reverse().join('');
-}
+  
+    return result;
+  }
